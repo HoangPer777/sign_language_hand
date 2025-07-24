@@ -1,0 +1,7 @@
+<!-- handtracker/templates/upload.html -->
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <p>Chọn video:</p>
+    <input type="file" name="video_file" accept="video/*" required>
+    <button type="submit">Tải lên & Phân tích</button>
+</form>
