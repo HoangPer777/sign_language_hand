@@ -48,12 +48,18 @@ def upload_view(request):
         video_path = fs.save(video.name, video)
         video_full_path = os.path.join(settings.MEDIA_ROOT, video_path)
 
-        json_path = os.path.join(settings.BASE_DIR, 'hand_keypoints.json')
+        # Lấy tên file video, đổi đuôi sang .json
+        base_name = os.path.splitext(video.name)[0]
+        json_filename = base_name + '.json'
+        json_path = os.path.join(settings.MEDIA_ROOT, json_filename)
         extract_hand_landmarks(video_full_path, json_path)
 
-        return render(request, 'upload.html', {'message': '✅ Phân tích hoàn tất! Dữ liệu đã lưu vào hand_keypoints.json'})
-
-    return render(request, 'upload.html')
+        return render(request, 'upload.html', {
+            'message': f'✅ Phân tích hoàn tất! Dữ liệu đã lưu vào {json_filename}',
+            'show_simulation': True,
+            'json_url': f'/download-hand-keypoints/?filename={json_filename}'
+        })
+    return render(request, 'upload.html', {'show_simulation': False})
 
 # def hand_keypoints_api(request):
 #     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -136,4 +142,12 @@ def export_hand_video(request):
         out.write(img)
     out.release()
     return FileResponse(open(video_path, 'rb'), as_attachment=True, filename='hand_simulation.mp4')
+
+def download_hand_keypoints(request):
+    filename = request.GET.get('filename', 'hand_keypoints.json')
+    json_path = os.path.join(settings.MEDIA_ROOT, filename)
+    if not os.path.exists(json_path):
+        from django.http import Http404
+        raise Http404('File not found')
+    return FileResponse(open(json_path, 'rb'), as_attachment=True, filename=filename)
 
