@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mô phỏng chuyển động bàn tay</title>
+    <style>
+        canvas {
+            border: 1px solid #333;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <h2>Mô phỏng chuyển động bàn tay</h2>
+    <canvas id="handCanvas" width="640" height="480"></canvas>
+    <button onclick="window.location.href='/export-hand-video/'">Tải video mô phỏng (.mp4)</button>
+    <p style="margin-top:10px;color:#555;font-size:14px;">Nhấn nút để xuất và tải video mô phỏng chuyển động bàn tay.</p>
+    <script>
+        const canvas = document.getElementById('handCanvas');
+        const ctx = canvas.getContext('2d');
+        // Định nghĩa các ngón tay và màu sắc
+        {#Ngón cái: đỏ (#e74c3c)#}
+        {#Ngón trỏ: vàng (#f1c40f)#}
+        {#Ngón giữa: xanh lá (#2ecc71)#}
+        {#Ngón áp út: xanh dương (#3498db)#}
+        {#Ngón út: tím (#9b59b6)#}
+        {#Lòng bàn tay và cổ tay: xám đậm#}
+        const fingers = [
+            { name: 'thumb', color: '#e74c3c', connections: [[0,1],[1,2],[2,3],[3,4]], points: [1,2,3,4] },
+            { name: 'index', color: '#f1c40f', connections: [[0,5],[5,6],[6,7],[7,8]], points: [5,6,7,8] },
+            { name: 'middle', color: '#2ecc71', connections: [[0,9],[9,10],[10,11],[11,12]], points: [9,10,11,12] },
+            { name: 'ring', color: '#3498db', connections: [[0,13],[13,14],[14,15],[15,16]], points: [13,14,15,16] },
+            { name: 'pinky', color: '#9b59b6', connections: [[0,17],[17,18],[18,19],[19,20]], points: [17,18,19,20] }
+        ];
+        const palmColor = '#555';
+        let frames = [];
+        let frameIdx = 0;
+        let timer = null;
+        function drawHand(points) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Vẽ các đường nối của từng ngón tay
+            for (const finger of fingers) {
+                ctx.strokeStyle = finger.color;
+                ctx.lineWidth = 3;
+                for (const [start, end] of finger.connections) {
+                    const p1 = points[start];
+                    const p2 = points[end];
+                    if (p1 && p2) {
+                        ctx.beginPath();
+                        ctx.moveTo(p1[0], p1[1]);
+                        ctx.lineTo(p2[0], p2[1]);
+                        ctx.stroke();
+                    }
+                }
+            }
+            // Vẽ các đường nối lòng bàn tay (giữa các gốc ngón)
+            ctx.strokeStyle = palmColor;
+            ctx.lineWidth = 2;
+            const palmConnections = [[0,5],[5,9],[9,13],[13,17],[17,0]];
+            for (const [start, end] of palmConnections) {
+                const p1 = points[start];
+                const p2 = points[end];
+                if (p1 && p2) {
+                    ctx.beginPath();
+                    ctx.moveTo(p1[0], p1[1]);
+                    ctx.lineTo(p2[0], p2[1]);
+                    ctx.stroke();
+                }
+            }
+            // Vẽ các điểm của từng ngón tay
+            for (const finger of fingers) {
+                ctx.fillStyle = finger.color;
+                for (const idx of finger.points) {
+                    const p = points[idx];
+                    if (p) {
+                        ctx.beginPath();
+                        ctx.arc(p[0], p[1], 6, 0, 2 * Math.PI);
+                        ctx.fill();
+                    }
+                }
+            }
+            // Vẽ điểm cổ tay (gốc bàn tay)
+            ctx.fillStyle = palmColor;
+            if (points[0]) {
+                ctx.beginPath();
+                ctx.arc(points[0][0], points[0][1], 7, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+        function animate() {
+            if (frames.length === 0) return;
+            drawHand(frames[frameIdx]);
+            frameIdx = (frameIdx + 1) % frames.length;
+            timer = setTimeout(animate, 50); // 20 FPS
+        }
+        fetch('/hand-keypoints-api/')
+            .then(res => res.json())
+            .then(data => {
+                frames = data.frames;
+                if (frames.length > 0) animate();
+            });
+    </script>
+</body>
+</html> 
