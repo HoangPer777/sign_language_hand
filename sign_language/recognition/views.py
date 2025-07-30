@@ -38,8 +38,15 @@ def extract_hand_landmarks(video_path, json_path):
 
     cap.release()
 
-    with open(json_path, 'w') as f:
+    # Lưu dữ liệu vào file JSON
+    with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(frame_data, f, indent=2)
+
+    # Ghi đè file hand_keypoints.json ở thư mục gốc project
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    hand_keypoints_path = os.path.join(base_dir, 'hand_keypoints.json')
+    with open(json_path, 'r', encoding='utf-8') as src, open(hand_keypoints_path, 'w', encoding='utf-8') as dst:
+        dst.write(src.read())
 
 def upload_view(request):
     if request.method == 'POST' and request.FILES.get('video_file'):
