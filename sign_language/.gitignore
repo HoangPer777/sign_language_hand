@@ -193,3 +193,6 @@ celerybeat-schedule.db
 
 # Redis dump file
 dump.rdb
+
+# no save video test
+media

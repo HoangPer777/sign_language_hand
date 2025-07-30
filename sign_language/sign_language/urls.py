@@ -19,11 +19,15 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
-from recognition.views import upload_view
+from recognition.views import upload_view, hand_keypoints_api, hand_simulation_view, export_hand_video, download_hand_keypoints
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', upload_view, name='upload'),  # Trang chính: upload video
+    path('', upload_view, name='upload'),  # Trang: upload video
+    path('hand-keypoints-api/', hand_keypoints_api, name='hand_keypoints_api'),
+    path('hand-simulation/', hand_simulation_view, name='hand_simulation'),
+    path('export-hand-video/', export_hand_video, name='export_hand_video'),
+    path('download-hand-keypoints/', download_hand_keypoints, name='download_hand_keypoints'),
 ]
 
 # Cho phép truy cập file media (video tải lên) trong quá trình dev
